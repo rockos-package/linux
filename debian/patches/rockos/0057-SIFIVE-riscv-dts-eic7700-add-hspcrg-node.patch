@@ -1,0 +1,37 @@
+From ceb65220b8820b7ab97da424d67c23d74b5c03fc Mon Sep 17 00:00:00 2001
+From: Pritesh Patel <pritesh.patel@einfochips.com>
+Date: Fri, 28 Nov 2025 12:40:49 +0530
+Subject: [PATCH 57/99] SIFIVE: riscv: dts: eic7700: add hspcrg node
+
+FROM: https://github.com/sifiveinc/riscv-linux/commit/8eac2823676fcd979cd152505ac22fec5a66229b
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700.dtsi b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+index 4c2212238257..04592db52e56 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700.dtsi
++++ b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+@@ -336,6 +336,16 @@ stmmac_axi_setup_gmac1: stmmac-axi-config {
+ 			};
+ 		};
+ 
++		hspcrg: clock-controller@50440000 {
++			compatible = "eswin,eic7700-hspcrg";
++			reg = <0x0 0x50440000 0x0 0x2000>;
++			clocks = <&clk EIC7700_CLK_GATE_HSP_CFG_CLK>,
++				   <&clk EIC7700_CLK_FIXED_FACTOR_CLK_1M_DIV24>,
++				   <&clk EIC7700_CLK_GATE_HSP_SATA_OOB_CLK>;
++			clock-names = "cfg", "mmc", "sata";
++			#clock-cells = <1>;
++			#reset-cells = <1>;
++		};
+ 
+ 		sdhci_emmc: mmc@50450000 {
+ 			compatible = "eswin,eic7700-dwcmshc";
+-- 
+2.53.0
+

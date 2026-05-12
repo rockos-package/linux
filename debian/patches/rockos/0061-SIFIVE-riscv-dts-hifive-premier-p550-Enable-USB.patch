@@ -1,0 +1,32 @@
+From 45d4b73ee6dda1ac6d7d36c295a98d40a5ed91c8 Mon Sep 17 00:00:00 2001
+From: Pritesh Patel <pritesh.patel@einfochips.com>
+Date: Fri, 21 Nov 2025 12:40:53 +0530
+Subject: [PATCH 61/99] SIFIVE: riscv: dts: hifive-premier-p550: Enable USB
+
+FROM: https://github.com/sifiveinc/riscv-linux/commit/65819b71e2e4ef7cd532527f75f5886682cf599e
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index ace33783872b..ae9fd2a5fdb0 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -304,3 +304,11 @@ &uart2 {
+ &pcie {
+ 	status = "okay";
+ };
++
++&usb0 {
++	status = "okay";
++};
++
++&usb1 {
++	status = "okay";
++};
+-- 
+2.53.0
+

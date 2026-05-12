@@ -1,0 +1,50 @@
+From 5eed2b6b26a4288604080e63009adf80ab9f4abe Mon Sep 17 00:00:00 2001
+From: Min Lin <linmin@eswincomputing.com>
+Date: Mon, 1 Dec 2025 13:30:41 +0800
+Subject: [PATCH 45/99] ESWIN: drivers: eswin: Enable ways for ccache
+
+FROM: https://github.com/hehuaneswincomputing/linux-next/commit/6686fd8f1ffb114be8c604348f16faee61107c13
+
+Enabled all available cache ways to be used as cache.
+This change is required for CPU performance improvement.
+
+Out of reset, only way 0 is enabled and the disabled ways
+are addressable in L2-LIM(Loosely Integrated Memory).
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Min Lin <linmin@eswincomputing.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ drivers/cache/sifive_ccache.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/cache/sifive_ccache.c b/drivers/cache/sifive_ccache.c
+index a86800b123b9..fee4da5d9ebc 100644
+--- a/drivers/cache/sifive_ccache.c
++++ b/drivers/cache/sifive_ccache.c
+@@ -294,6 +294,9 @@ static int __init sifive_ccache_init(void)
+ 	const struct of_device_id *match;
+ 	unsigned long quirks __maybe_unused;
+ 	int rc;
++#ifdef CONFIG_ARCH_ESWIN
++	unsigned int config, ways;
++#endif
+ 
+ 	np = of_find_matching_node_and_match(NULL, sifive_ccache_ids, &match);
+ 	if (!np)
+@@ -317,6 +320,12 @@ static int __init sifive_ccache_init(void)
+ 		goto err_unmap;
+ 	}
+ 
++#ifdef CONFIG_ARCH_ESWIN
++	config = readl(ccache_base + SIFIVE_CCACHE_CONFIG);
++	ways = (config >> 8) & 0xff;
++	writel(ways-1, ccache_base + SIFIVE_CCACHE_WAYENABLE);
++#endif
++
+ #ifdef CONFIG_RISCV_NONSTANDARD_CACHE_OPS
+ 	if (quirks & QUIRK_NONSTANDARD_CACHE_OPS) {
+ 		riscv_cbom_block_size = SIFIVE_CCACHE_LINE_SIZE;
+-- 
+2.53.0
+

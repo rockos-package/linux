@@ -1,0 +1,70 @@
+From 63b4355846b38caf64e4e443d5ce39a079cb038c Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 21:22:32 +0800
+Subject: [PATCH 78/99] RUYI: riscv: dts: milkv-megrez: enable EMMC and SD card
+
+Enable the on-board eMMC and SD card slot on the Milk-V Megrez board.
+
+The SD card detect signal (SD0_DET net) is wired to SoC ball F14
+(mode_set0 pin); when this pin is muxed to GPIO function it appears as
+gpioA[13]. Add a pinctrl group selecting GPIO function with input
+enable and pull-up bias for the mode_set0 pin, and wire cd-gpios to
+gpioA[13] so the SDHCI driver uses GPIO-based card detection.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-milkv-megrez.dts   | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index 5742a9ae4aad..b99984925a56 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -12,6 +12,8 @@ / {
+ 	model = "Milk-V Megrez";
+ 
+ 	aliases {
++		mmc0 = &sdhci_emmc;
++		mmc1 = &sdio0;
+ 		serial0 = &uart0;
+ 		ethernet0 = &gmac0;
+ 		ethernet1 = &gmac1;
+@@ -40,6 +42,15 @@ &pinctrl {
+ 	status = "okay";
+ 	vrgmii-supply = <&vcc_1v8>;
+ 
++	pinctrl_gpio13: gpio13-grp {
++		gpio13-pins {
++			pins = "mode_set0";
++			function = "gpio";
++			input-enable;
++			bias-pull-up;
++		};
++	};
++
+ 	pinctrl_gpio16: gpio16-grp {
+ 		gpio16-pins {
+ 			pins = "mode_set3";
+@@ -104,6 +115,19 @@ gmac1_phy0: ethernet-phy@0 {
+ 	};
+ };
+ 
++&sdhci_emmc {
++	status = "okay";
++	/delete-property/ mmc-hs400-1_8v;
++	mmc-hs200-1_8v;
++};
++
++&sdio0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_gpio13>;
++	cd-gpios = <&gpioA 13 GPIO_ACTIVE_LOW>;
++};
++
+ &uart0 {
+ 	status = "okay";
+ };
+-- 
+2.53.0
+

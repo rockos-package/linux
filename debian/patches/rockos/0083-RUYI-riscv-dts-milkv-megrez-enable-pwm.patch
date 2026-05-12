@@ -1,0 +1,46 @@
+From 34e112d9c011bc60271f9d2641a005d3e5ff15b0 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:52:11 +0800
+Subject: [PATCH 83/99] RUYI: riscv: dts: milkv-megrez: enable pwm
+
+Enable PWM controller used for the fan on the Milk-V Megrez board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index be2eb3d8c5bb..59ee54f6c8fb 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -84,6 +84,13 @@ gpio94-pins {
+ 			bias-disable;
+ 		};
+ 	};
++
++	pinctrl_pwm0: pwm0-grp {
++		pwm0-pins {
++			pins = "fan_pwm";
++			function = "pwm";
++		};
++	};
+ };
+ 
+ &gmac0 {
+@@ -135,6 +142,12 @@ &pcie {
+ 	status = "okay";
+ };
+ 
++&pwm0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm0>;
++};
++
+ &sata {
+ 	status = "okay";
+ };
+-- 
+2.53.0
+

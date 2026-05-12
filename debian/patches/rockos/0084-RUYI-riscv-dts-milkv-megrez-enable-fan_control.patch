@@ -1,0 +1,40 @@
+From 55101851b5bccd495db60c437278ee93bd735340 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:52:28 +0800
+Subject: [PATCH 84/99] RUYI: riscv: dts: milkv-megrez: enable fan_control
+
+Enable fan tach controller for fan RPM monitoring on the Milk-V Megrez
+board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index 59ee54f6c8fb..04e3d0a7bcc0 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -91,6 +91,19 @@ pwm0-pins {
+ 			function = "pwm";
+ 		};
+ 	};
++
++	pinctrl_fan_tach_pins: fan-tach-grp {
++		fan-tach-pins {
++			pins = "fan_tach";
++			function = "fan_tach";
++		};
++	};
++};
++
++&fan_control {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_fan_tach_pins>;
+ };
+ 
+ &gmac0 {
+-- 
+2.53.0
+

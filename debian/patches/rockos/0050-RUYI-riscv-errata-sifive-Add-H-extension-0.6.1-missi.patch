@@ -1,0 +1,215 @@
+From 402361a6dc233e509c301d20fa4d300dcd0c187f Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 03:19:11 +0800
+Subject: [PATCH 50/99] RUYI: riscv: errata: sifive: Add H-extension 0.6.1
+ missing HENVCFG workaround
+
+SiFive P550 (arch_id 0x8000000000000008, impid 0x6220425) implements
+H-extension draft version 0.6.1, which does not define the HENVCFG
+and HENVCFGH CSRs that were added in later versions of the H-extension.
+Accessing these CSRs triggers an illegal instruction exception.
+
+Add a new SiFive errata (ERRATA_SIFIVE_H_0_6_1) to detect affected
+cores at boot time and set a global flag (sifive_h_0_6_1). In KVM,
+skip HENVCFG/HENVCFGH CSR writes in kvm_arch_vcpu_load() when this
+flag is set. Also protect the HENVCFG access in the SBI FWFT pointer
+masking PMM probing path.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/Kconfig.errata                    | 14 ++++++++++
+ arch/riscv/errata/sifive/errata.c            | 29 ++++++++++++++++++++
+ arch/riscv/include/asm/errata_list.h         |  4 +++
+ arch/riscv/include/asm/errata_list_vendors.h |  3 +-
+ arch/riscv/kvm/vcpu.c                        | 18 ++++++++----
+ arch/riscv/kvm/vcpu_sbi_fwft.c               |  9 +++++-
+ 6 files changed, 69 insertions(+), 8 deletions(-)
+
+diff --git a/arch/riscv/Kconfig.errata b/arch/riscv/Kconfig.errata
+index ac587a9067fd..b18f6dce3ec1 100644
+--- a/arch/riscv/Kconfig.errata
++++ b/arch/riscv/Kconfig.errata
+@@ -76,6 +76,20 @@ config ERRATA_SIFIVE_CIP_1200
+ 
+ 	  If you don't know what to do here, say "Y".
+ 
++config ERRATA_SIFIVE_H_0_6_1
++	bool "SiFive H-extension 0.6.1 missing CSR workaround"
++	depends on ERRATA_SIFIVE && KVM
++	default y
++	help
++	  SiFive cores implementing H-extension draft version 0.6.1
++	  (e.g. P550 with arch_id 0x8000000000000008, impid 0x6220425)
++	  do not implement the HENVCFG/HENVCFGH CSRs that were
++	  added in later H-extension versions. Accessing them
++	  triggers an illegal instruction exception.
++
++	  Enable this to skip HENVCFG/HENVCFGH CSR accesses on
++	  affected cores.
++
+ config ERRATA_STARFIVE_JH7100
+ 	bool "StarFive JH7100 support for old devicetrees"
+ 	depends on ARCH_STARFIVE
+diff --git a/arch/riscv/errata/sifive/errata.c b/arch/riscv/errata/sifive/errata.c
+index d0c61f86cba3..46918bda11d8 100644
+--- a/arch/riscv/errata/sifive/errata.c
++++ b/arch/riscv/errata/sifive/errata.c
+@@ -13,6 +13,12 @@
+ #include <asm/vendorid_list.h>
+ #include <asm/errata_list.h>
+ #include <asm/vendor_extensions.h>
++#include <linux/export.h>
++
++#ifdef CONFIG_ERRATA_SIFIVE_H_0_6_1
++bool sifive_h_0_6_1;
++EXPORT_SYMBOL(sifive_h_0_6_1);
++#endif
+ 
+ struct errata_info_t {
+ 	char name[32];
+@@ -51,6 +57,18 @@ static bool errata_cip_1200_check_func(unsigned long  arch_id, unsigned long imp
+ 	return true;
+ }
+ 
++static bool errata_h_0_6_1_check_func(unsigned long arch_id, unsigned long impid)
++{
++	/*
++	 * Affected cores:
++	 * Architecture ID: 0x8000000000000008
++	 * Implement ID: 0x6220425
++	 */
++	if (arch_id != 0x8000000000000008 || impid != 0x6220425)
++		return false;
++	return true;
++}
++
+ static struct errata_info_t errata_list[ERRATA_SIFIVE_NUMBER] = {
+ 	{
+ 		.name = "cip-453",
+@@ -60,6 +78,10 @@ static struct errata_info_t errata_list[ERRATA_SIFIVE_NUMBER] = {
+ 		.name = "cip-1200",
+ 		.check_func = errata_cip_1200_check_func
+ 	},
++	{
++		.name = "h-0-6-1",
++		.check_func = errata_h_0_6_1_check_func
++	},
+ };
+ 
+ static u32 __init_or_module sifive_errata_probe(unsigned long archid,
+@@ -72,6 +94,13 @@ static u32 __init_or_module sifive_errata_probe(unsigned long archid,
+ 		if (errata_list[idx].check_func(archid, impid))
+ 			cpu_req_errata |= (1U << idx);
+ 
++#ifdef CONFIG_ERRATA_SIFIVE_H_0_6_1
++	if (cpu_req_errata & BIT(ERRATA_SIFIVE_H_0_6_1))
++		sifive_h_0_6_1 = true;
++#endif
++	/* h-0-6-1 does not use ALTERNATIVE text patching */
++	cpu_req_errata &= ~BIT(ERRATA_SIFIVE_H_0_6_1);
++
+ 	return cpu_req_errata;
+ }
+ 
+diff --git a/arch/riscv/include/asm/errata_list.h b/arch/riscv/include/asm/errata_list.h
+index fa03021b7074..e866ba7754d9 100644
+--- a/arch/riscv/include/asm/errata_list.h
++++ b/arch/riscv/include/asm/errata_list.h
+@@ -53,6 +53,10 @@ asm(ALTERNATIVE(	\
+ 	: /* no inputs */	\
+ 	: "memory")
+ 
++#ifdef CONFIG_ERRATA_SIFIVE_H_0_6_1
++extern bool sifive_h_0_6_1;
++#endif
++
+ #define ALT_CMO_OP(_op, _start, _size, _cachesize)			\
+ asm volatile(ALTERNATIVE(						\
+ 	__nops(5),							\
+diff --git a/arch/riscv/include/asm/errata_list_vendors.h b/arch/riscv/include/asm/errata_list_vendors.h
+index ec7eba373437..57432ce07c8d 100644
+--- a/arch/riscv/include/asm/errata_list_vendors.h
++++ b/arch/riscv/include/asm/errata_list_vendors.h
+@@ -11,7 +11,8 @@
+ #ifdef CONFIG_ERRATA_SIFIVE
+ #define	ERRATA_SIFIVE_CIP_453 0
+ #define	ERRATA_SIFIVE_CIP_1200 1
+-#define	ERRATA_SIFIVE_NUMBER 2
++#define	ERRATA_SIFIVE_H_0_6_1 2
++#define	ERRATA_SIFIVE_NUMBER 3
+ #endif
+ 
+ #ifdef CONFIG_ERRATA_THEAD
+diff --git a/arch/riscv/kvm/vcpu.c b/arch/riscv/kvm/vcpu.c
+index 84e9798330ca..ec379ea20487 100644
+--- a/arch/riscv/kvm/vcpu.c
++++ b/arch/riscv/kvm/vcpu.c
+@@ -593,9 +593,12 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
+ 		nacl_csr_write(nsh, CSR_HEDELEG, cfg->hedeleg);
+ 		nacl_csr_write(nsh, CSR_HVIP, csr->hvip);
+ 		nacl_csr_write(nsh, CSR_VSATP, csr->vsatp);
+-		nacl_csr_write(nsh, CSR_HENVCFG, cfg->henvcfg);
+-		if (IS_ENABLED(CONFIG_32BIT))
+-			nacl_csr_write(nsh, CSR_HENVCFGH, cfg->henvcfg >> 32);
++		if (!IS_ENABLED(CONFIG_ERRATA_SIFIVE_H_0_6_1) ||
++		    !sifive_h_0_6_1) {
++			nacl_csr_write(nsh, CSR_HENVCFG, cfg->henvcfg);
++			if (IS_ENABLED(CONFIG_32BIT))
++				nacl_csr_write(nsh, CSR_HENVCFGH, cfg->henvcfg >> 32);
++		}
+ 		if (riscv_has_extension_unlikely(RISCV_ISA_EXT_SMSTATEEN)) {
+ 			nacl_csr_write(nsh, CSR_HSTATEEN0, cfg->hstateen0);
+ 			if (IS_ENABLED(CONFIG_32BIT))
+@@ -612,9 +615,12 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
+ 		csr_write(CSR_HEDELEG, cfg->hedeleg);
+ 		csr_write(CSR_HVIP, csr->hvip);
+ 		csr_write(CSR_VSATP, csr->vsatp);
+-		csr_write(CSR_HENVCFG, cfg->henvcfg);
+-		if (IS_ENABLED(CONFIG_32BIT))
+-			csr_write(CSR_HENVCFGH, cfg->henvcfg >> 32);
++		if (!IS_ENABLED(CONFIG_ERRATA_SIFIVE_H_0_6_1) ||
++		    !sifive_h_0_6_1) {
++			csr_write(CSR_HENVCFG, cfg->henvcfg);
++			if (IS_ENABLED(CONFIG_32BIT))
++				csr_write(CSR_HENVCFGH, cfg->henvcfg >> 32);
++		}
+ 		if (riscv_has_extension_unlikely(RISCV_ISA_EXT_SMSTATEEN)) {
+ 			csr_write(CSR_HSTATEEN0, cfg->hstateen0);
+ 			if (IS_ENABLED(CONFIG_32BIT))
+diff --git a/arch/riscv/kvm/vcpu_sbi_fwft.c b/arch/riscv/kvm/vcpu_sbi_fwft.c
+index 2eab15339694..4744859a600a 100644
+--- a/arch/riscv/kvm/vcpu_sbi_fwft.c
++++ b/arch/riscv/kvm/vcpu_sbi_fwft.c
+@@ -13,6 +13,7 @@
+ #include <asm/sbi.h>
+ #include <asm/kvm_vcpu_sbi.h>
+ #include <asm/kvm_vcpu_sbi_fwft.h>
++#include <asm/errata_list.h>
+ 
+ #define MIS_DELEG (BIT_ULL(EXC_LOAD_MISALIGNED) | BIT_ULL(EXC_STORE_MISALIGNED))
+ 
+@@ -131,6 +132,10 @@ static long kvm_sbi_fwft_get_misaligned_delegation(struct kvm_vcpu *vcpu,
+ 
+ static bool try_to_set_pmm(unsigned long value)
+ {
++	if (IS_ENABLED(CONFIG_ERRATA_SIFIVE_H_0_6_1) &&
++	    sifive_h_0_6_1)
++		return false;
++
+ 	csr_set(CSR_HENVCFG, value);
+ 	return (csr_read_clear(CSR_HENVCFG, ENVCFG_PMM) & ENVCFG_PMM) == value;
+ }
+@@ -186,7 +191,9 @@ static long kvm_sbi_fwft_set_pointer_masking_pmlen(struct kvm_vcpu *vcpu,
+ 	 * update here so that VCPU see's pointer masking mode change
+ 	 * immediately.
+ 	 */
+-	if (!one_reg_access)
++	if (!one_reg_access &&
++	    (!IS_ENABLED(CONFIG_ERRATA_SIFIVE_H_0_6_1) ||
++	     !sifive_h_0_6_1))
+ 		csr_write(CSR_HENVCFG, vcpu->arch.cfg.henvcfg);
+ 
+ 	return SBI_SUCCESS;
+-- 
+2.53.0
+

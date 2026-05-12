@@ -1,0 +1,31 @@
+From 752975c76b89a43e5d2e1493adca2888428d6203 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:51:47 +0800
+Subject: [PATCH 82/99] RUYI: riscv: dts: milkv-megrez: Enable USB
+
+Enable usb0 and usb1 on the Milk-V Megrez board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index 54b520f6d64a..be2eb3d8c5bb 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -163,3 +163,11 @@ &uart0 {
+ &uart2 {
+ 	status = "okay";
+ };
++
++&usb0 {
++	status = "okay";
++};
++
++&usb1 {
++	status = "okay";
++};
+-- 
+2.53.0
+

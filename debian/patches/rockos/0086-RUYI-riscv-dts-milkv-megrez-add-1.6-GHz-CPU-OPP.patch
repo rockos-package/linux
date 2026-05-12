@@ -1,0 +1,37 @@
+From 3f1b0d45a75603fff819f7c9d9a3752062e13299 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 22:46:29 +0800
+Subject: [PATCH 86/99] RUYI: riscv: dts: milkv-megrez: add 1.6 GHz CPU OPP
+
+Extend the shared CPU OPP table with a 1.6 GHz entry at 0.8 V on the
+Milk-V Megrez board. The base eic7700 OPP table caps the CPU at
+1.4 GHz; Megrez and the SiFive HiFive Premier P550 are validated to
+run at 1.6 GHz reliably (other EIC7700 boards are not guaranteed).
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index da5d9a7ce4dd..2813e2f1ea83 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -49,6 +49,14 @@ vcc_1v8: vcc1v8 {
+ 	};
+ };
+ 
++&cpu_opp_table {
++	opp-1600000000 {
++		opp-hz = /bits/ 64 <1600000000>;
++		opp-microvolt = <800000>;
++		clock-latency-ns = <70000>;
++	};
++};
++
+ &xtal24m {
+ 	clock-frequency = <24000000>;
+ 	clock-output-names = "xtal24m";
+-- 
+2.53.0
+

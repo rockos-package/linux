@@ -1,0 +1,203 @@
+From 7b6a02f6f368a2fa63fc4a46c098c70451f77439 Mon Sep 17 00:00:00 2001
+From: Zhi Li <lizhi2@eswincomputing.com>
+Date: Mon, 27 Apr 2026 15:24:39 +0800
+Subject: [PATCH 20/99] FROMLIST: dt-bindings: ethernet: eswin: add clock
+ sampling control
+
+Due to chip backend reasons, there is already an approximately 4-5 ns
+skew between the RX clock and data of the eth1 MAC controller inside
+the silicon.
+
+For 1000M, the RX clock must be inverted since it is not possible to
+meet the RGMII timing requirements using only rx-internal-delay-ps on
+the MAC together with the standard 2 ns delay on the PHY. Therefore,
+even on a properly designed board, eth1 still requires RX clock
+inversion.
+
+This behaviour effectively breaks the RGMII timing assumptions at the
+SoC level.
+
+For the TX path of eth1, there is also a skew between the TX clock
+and data on the MAC controller inside the silicon. This skew happens
+to be approximately 2 ns. Therefore, it can be considered that the
+2 ns delay of TX is provided by the MAC, so the TX is compliant with
+the RGMII standard.
+
+For 10/100 operation, the approximately 4-5 ns skew in the chip does
+not break the standard. The RGMII timing table (Section 3.3) specifies
+that for 10/100 operation the maximum value is unspecified:
+https://community.nxp.com/pwmxy87654/attachments/pwmxy87654/imx-processors/20655/1/RGMIIv2_0_final_hp.pdf
+
+Due to the eth1 silicon behavior described above, a new compatible
+string "eswin,eic7700-qos-eth-clk-inversion" is added to the device
+tree. This allows the driver to handle the differences between eth1
+and eth0 through dedicated logic.
+
+The rx-internal-delay-ps and tx-internal-delay-ps properties now use
+minimum and maximum constraints to reflect the actual hardware delay
+range (0-2540 ps) applied in 20 ps steps. This relaxes the binding
+validation compared to the previous enum-based definition and avoids
+regressions for existing DTBs while keeping the same hardware limits.
+
+Treat the RX/TX internal delay properties as optional, board-specific
+tuning knobs and remove them from the example to avoid encouraging
+their use.
+
+In addition, the binding now includes additional background information
+about the HSP CSR registers accessed by the MAC. The TXD and RXD delay
+control registers are included so the driver can explicitly clear any
+residual configuration left by the bootloader.
+
+Background reference for the High-Speed Subsystem and HSP CSR block is
+available in Chapter 10 ("High-Speed Interface") of the EIC7700X SoC
+Technical Reference Manual, Part 4
+(EIC7700X_SoC_Technical_Reference_Manual_Part4.pdf):
+https://github.com/eswincomputing/EIC7700X-SoC-Technical-Reference-Manual/releases
+
+There are currently no in-tree users of the EIC7700 Ethernet driver, so
+these changes are safe.
+
+Fixes: 888bd0eca93c ("dt-bindings: ethernet: eswin: Document for EIC7700 SoC")
+Signed-off-by: Zhi Li <lizhi2@eswincomputing.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://lore.kernel.org/r/20260427072439.1134-1-lizhi2@eswincomputing.com
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../bindings/net/eswin,eic7700-eth.yaml       | 69 +++++++++++++++----
+ 1 file changed, 55 insertions(+), 14 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/eswin,eic7700-eth.yaml b/Documentation/devicetree/bindings/net/eswin,eic7700-eth.yaml
+index 91e8cd1db67b..0b27719feb7d 100644
+--- a/Documentation/devicetree/bindings/net/eswin,eic7700-eth.yaml
++++ b/Documentation/devicetree/bindings/net/eswin,eic7700-eth.yaml
+@@ -20,6 +20,7 @@ select:
+       contains:
+         enum:
+           - eswin,eic7700-qos-eth
++          - eswin,eic7700-qos-eth-clk-inversion
+   required:
+     - compatible
+ 
+@@ -29,7 +30,9 @@ allOf:
+ properties:
+   compatible:
+     items:
+-      - const: eswin,eic7700-qos-eth
++      - enum:
++          - eswin,eic7700-qos-eth
++          - eswin,eic7700-qos-eth-clk-inversion
+       - const: snps,dwmac-5.20
+ 
+   reg:
+@@ -63,16 +66,29 @@ properties:
+       - const: stmmaceth
+ 
+   rx-internal-delay-ps:
+-    enum: [0, 200, 600, 1200, 1600, 1800, 2000, 2200, 2400]
++    minimum: 0
++    maximum: 2540
++    multipleOf: 20
+ 
+   tx-internal-delay-ps:
+-    enum: [0, 200, 600, 1200, 1600, 1800, 2000, 2200, 2400]
++    minimum: 0
++    maximum: 2540
++    multipleOf: 20
+ 
+   eswin,hsp-sp-csr:
+     description:
+       HSP CSR is to control and get status of different high-speed peripherals
+       (such as Ethernet, USB, SATA, etc.) via register, which can tune
+       board-level's parameters of PHY, etc.
++
++      Additional background information about the High-Speed Subsystem
++      and the HSP CSR block is available in Chapter 10 ("High-Speed Interface")
++      of the EIC7700X SoC Technical Reference Manual, Part 4
++      (EIC7700X_SoC_Technical_Reference_Manual_Part4.pdf). The manual is
++      publicly available at
++      https://github.com/eswincomputing/EIC7700X-SoC-Technical-Reference-Manual/releases
++
++      This reference is provided for background information only.
+     $ref: /schemas/types.yaml#/definitions/phandle-array
+     items:
+       - items:
+@@ -82,6 +98,8 @@ properties:
+           - description: Offset of AXI clock controller Low-Power request
+                          register
+           - description: Offset of register controlling TX/RX clock delay
++          - description: Offset of register controlling TXD delay
++          - description: Offset of register controlling RXD delay
+ 
+ required:
+   - compatible
+@@ -93,8 +111,6 @@ required:
+   - phy-mode
+   - resets
+   - reset-names
+-  - rx-internal-delay-ps
+-  - tx-internal-delay-ps
+   - eswin,hsp-sp-csr
+ 
+ unevaluatedProperties: false
+@@ -104,24 +120,49 @@ examples:
+     ethernet@50400000 {
+         compatible = "eswin,eic7700-qos-eth", "snps,dwmac-5.20";
+         reg = <0x50400000 0x10000>;
++        interrupt-parent = <&plic>;
++        interrupts = <61>;
++        interrupt-names = "macirq";
+         clocks = <&d0_clock 186>, <&d0_clock 171>, <&d0_clock 40>,
+                 <&d0_clock 193>;
+         clock-names = "axi", "cfg", "stmmaceth", "tx";
++        resets = <&reset 95>;
++        reset-names = "stmmaceth";
++        eswin,hsp-sp-csr = <&hsp_sp_csr 0x100 0x108 0x118 0x114 0x11c>;
++        phy-handle = <&gmac0_phy0>;
++        phy-mode = "rgmii-id";
++        snps,aal;
++        snps,fixed-burst;
++        snps,tso;
++        snps,axi-config = <&stmmac_axi_setup_gmac0>;
++
++        stmmac_axi_setup_gmac0: stmmac-axi-config {
++            snps,blen = <0 0 0 0 16 8 4>;
++            snps,rd_osr_lmt = <2>;
++            snps,wr_osr_lmt = <2>;
++        };
++    };
++
++    ethernet@50410000 {
++        compatible = "eswin,eic7700-qos-eth-clk-inversion", "snps,dwmac-5.20";
++        reg = <0x50410000 0x10000>;
+         interrupt-parent = <&plic>;
+-        interrupts = <61>;
++        interrupts = <70>;
+         interrupt-names = "macirq";
+-        phy-mode = "rgmii-id";
+-        phy-handle = <&phy0>;
+-        resets = <&reset 95>;
++        clocks = <&d0_clock 186>, <&d0_clock 171>, <&d0_clock 40>,
++                <&d0_clock 194>;
++        clock-names = "axi", "cfg", "stmmaceth", "tx";
++        resets = <&reset 94>;
+         reset-names = "stmmaceth";
+-        rx-internal-delay-ps = <200>;
+-        tx-internal-delay-ps = <200>;
+-        eswin,hsp-sp-csr = <&hsp_sp_csr 0x100 0x108 0x118>;
+-        snps,axi-config = <&stmmac_axi_setup>;
++        eswin,hsp-sp-csr = <&hsp_sp_csr 0x200 0x208 0x218 0x214 0x21c>;
++        phy-handle = <&gmac1_phy0>;
++        phy-mode = "rgmii-id";
+         snps,aal;
+         snps,fixed-burst;
+         snps,tso;
+-        stmmac_axi_setup: stmmac-axi-config {
++        snps,axi-config = <&stmmac_axi_setup_gmac1>;
++
++        stmmac_axi_setup_gmac1: stmmac-axi-config {
+             snps,blen = <0 0 0 0 16 8 4>;
+             snps,rd_osr_lmt = <2>;
+             snps,wr_osr_lmt = <2>;
+-- 
+2.53.0
+

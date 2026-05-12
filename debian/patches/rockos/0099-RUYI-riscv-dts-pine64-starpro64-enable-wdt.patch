@@ -1,0 +1,39 @@
+From 4af8b443424e799ae2d207b04919f79e8303c407 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:44:43 +0800
+Subject: [PATCH 99/99] RUYI: riscv: dts: pine64-starpro64: enable wdt
+
+Enable all four watchdog timers on the Pine64 StarPro64 board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-pine64-starpro64.dts  | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index 2904c29e3196..cf9bd0b30eff 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -200,3 +200,19 @@ &usb0 {
+ &usb1 {
+ 	status = "okay";
+ };
++
++&wdt0 {
++	status = "okay";
++};
++
++&wdt1 {
++	status = "okay";
++};
++
++&wdt2 {
++	status = "okay";
++};
++
++&wdt3 {
++	status = "okay";
++};
+-- 
+2.53.0
+

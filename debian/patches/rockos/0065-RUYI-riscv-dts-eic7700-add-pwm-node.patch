@@ -1,0 +1,35 @@
+From 21e76acfd9d0f7340e551f36eb214a699281682e Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Wed, 6 May 2026 20:22:27 +0800
+Subject: [PATCH 65/99] RUYI: riscv: dts: eic7700: add pwm node
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700.dtsi | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700.dtsi b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+index 84f0a0f53b79..ae0ec8774c3c 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700.dtsi
++++ b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+@@ -635,6 +635,17 @@ pvt1: pvt@0x52360000 {
+ 			resets = <&reset EIC7700_RESET_PVT1>;
+ 		};
+ 
++		pwm0: pwm@50818000 {
++			compatible = "eswin,eic7700-pwm";
++			#pwm-cells = <3>;
++			reg = <0x0 0x50818000 0x0 0x4000>;
++			clocks = <&clk EIC7700_CLK_GATE_LSP_TIMER_PCLK>,
++				  <&clk EIC7700_CLK_GATE_LSP_TIMER_PCLK>;
++			clock-names = "bus", "timer";
++			resets = <&reset EIC7700_RESET_TIMER>;
++			status = "disabled";
++		};
++
+ 		pinctrl: pinctrl@51600080 {
+ 			compatible = "eswin,eic7700-pinctrl";
+ 			reg = <0x0 0x51600080 0x0 0x1fff80>;
+-- 
+2.53.0
+

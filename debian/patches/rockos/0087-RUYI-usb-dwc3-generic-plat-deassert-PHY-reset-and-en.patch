@@ -1,0 +1,74 @@
+From a43b4dafe06724c98fc74b2b8a4610bccdc0caae Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 21:53:19 +0800
+Subject: [PATCH 87/99] RUYI: usb: dwc3: generic-plat: deassert PHY reset and
+ enable bus clock for EIC7700
+
+The EIC7700 USB host controller fails to come up on usb0 with xHCI
+register handshakes timing out (-110), while usb1 happens to work
+because the bootloader leaves it in a usable state.
+
+According to the EIC7700X TRM, USB[01]_BUS_CTRL has these RW fields:
+  bit 28  clk_en        (high-active, default 1) -- bus/ref clocks
+  bit 25  phy_reset     (high-active, default 1) -- PHY held in reset
+  bit 24  sw_rst_n      (low-active,  default 0) -- core soft reset
+  bit 16  bus_clken_gs  (tie to 1)
+  bit 9   bus_clken_gm  (tie to 1)
+
+The previous read-modify-write OR'd FILTER_EN/CLKEN_GM/CLKEN_GS into
+the existing value, which preserved bit 25 phy_reset=1 and left bit 24
+sw_rst_n=0, so the PHY stayed in reset and the controller stayed soft-
+reset.
+
+Replace the read-modify-write with an explicit overwrite that clears
+phy_reset to 0, sets sw_rst_n to 1 (deasserted), and sets the clk_en
+bit, mirroring the downstream eswin DWC3 driver.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ drivers/usb/dwc3/dwc3-generic-plat.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/dwc3/dwc3-generic-plat.c b/drivers/usb/dwc3/dwc3-generic-plat.c
+index e846844e0023..1027ca80784b 100644
+--- a/drivers/usb/dwc3/dwc3-generic-plat.c
++++ b/drivers/usb/dwc3/dwc3-generic-plat.c
+@@ -17,6 +17,8 @@
+ #define EIC7700_HSP_BUS_FILTER_EN	BIT(0)
+ #define EIC7700_HSP_BUS_CLKEN_GM	BIT(9)
+ #define EIC7700_HSP_BUS_CLKEN_GS	BIT(16)
++#define EIC7700_HSP_BUS_SW_RST_N	BIT(24)
++#define EIC7700_HSP_BUS_CLK_EN		BIT(28)
+ #define EIC7700_HSP_AXI_LP_XM_CSYSREQ	BIT(0)
+ #define EIC7700_HSP_AXI_LP_XS_CSYSREQ	BIT(16)
+ 
+@@ -47,7 +49,6 @@ static int dwc3_eic7700_init(struct dwc3_generic *dwc3g)
+ 	u32 hsp_usb_axi_lp;
+ 	u32 hsp_usb_bus;
+ 	u32 args[2];
+-	u32 val;
+ 
+ 	regmap = syscon_regmap_lookup_by_phandle_args(dev->of_node,
+ 						      "eswin,hsp-sp-csr",
+@@ -60,9 +61,15 @@ static int dwc3_eic7700_init(struct dwc3_generic *dwc3g)
+ 	hsp_usb_bus       = args[0];
+ 	hsp_usb_axi_lp    = args[1];
+ 
+-	regmap_read(regmap, hsp_usb_bus, &val);
+-	regmap_write(regmap, hsp_usb_bus, val | EIC7700_HSP_BUS_FILTER_EN |
+-		     EIC7700_HSP_BUS_CLKEN_GM | EIC7700_HSP_BUS_CLKEN_GS);
++	/*
++	 * Overwrite (not read-modify-write) the bus control register so that
++	 * usb_phy_reset (bit 25, high-active, default 1) is cleared and the
++	 * PHY actually leaves reset; deassert the controller soft reset
++	 * (bit 24, low-active sw_rst_n) and keep the bus/ref clocks enabled.
++	 */
++	regmap_write(regmap, hsp_usb_bus, EIC7700_HSP_BUS_FILTER_EN |
++		     EIC7700_HSP_BUS_CLKEN_GM | EIC7700_HSP_BUS_CLKEN_GS |
++		     EIC7700_HSP_BUS_SW_RST_N | EIC7700_HSP_BUS_CLK_EN);
+ 
+ 	regmap_write(regmap, hsp_usb_axi_lp, EIC7700_HSP_AXI_LP_XM_CSYSREQ |
+ 		     EIC7700_HSP_AXI_LP_XS_CSYSREQ);
+-- 
+2.53.0
+

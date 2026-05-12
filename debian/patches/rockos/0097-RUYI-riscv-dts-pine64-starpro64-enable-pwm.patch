@@ -1,0 +1,46 @@
+From 1df6eac48d0ef810563a1930f8fec9de28a0554b Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:44:08 +0800
+Subject: [PATCH 97/99] RUYI: riscv: dts: pine64-starpro64: enable pwm
+
+Enable PWM controller used for the fan on the Pine64 StarPro64 board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-pine64-starpro64.dts     | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index 4feae5f570a0..2d973c4907e2 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -84,6 +84,13 @@ gpio94-pins {
+ 			bias-disable;
+ 		};
+ 	};
++
++	pinctrl_pwm0: pwm0-grp {
++		pwm0-pins {
++			pins = "fan_pwm";
++			function = "pwm";
++		};
++	};
+ };
+ 
+ &gmac0 {
+@@ -133,6 +140,12 @@ &pcie {
+ 	status = "okay";
+ };
+ 
++&pwm0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm0>;
++};
++
+ &sata {
+ 	status = "okay";
+ };
+-- 
+2.53.0
+

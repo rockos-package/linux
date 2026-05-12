@@ -1,0 +1,52 @@
+From 1567b05d12257954a90b26c424a8a858d4c27116 Mon Sep 17 00:00:00 2001
+From: Pritesh Patel <pritesh.patel@einfochips.com>
+Date: Fri, 28 Nov 2025 12:59:49 +0530
+Subject: [PATCH 58/99] SIFIVE: riscv: dts: eic7700: add SATA PHY and SATA
+
+FROM: https://github.com/sifiveinc/riscv-linux/commit/ba3f82371d80252e7756dfeac17b7f14d9ae6fe4
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700.dtsi | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700.dtsi b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+index 04592db52e56..c928326b1693 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700.dtsi
++++ b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+@@ -347,6 +347,31 @@ hspcrg: clock-controller@50440000 {
+ 			#reset-cells = <1>;
+ 		};
+ 
++		sata: sata@50420000 {
++			compatible = "eswin,eic7700-ahci", "snps,dwc-ahci";
++			reg = <0x0 0x50420000 0x0 0x10000>;
++			interrupt-parent = <&plic>;
++			interrupts = <58>;
++			clocks = <&clk 171>, <&clk 186>;
++			clock-names = "pclk", "aclk";
++			phys = <&sata_phy>;
++			phy-names = "sata-phy";
++			ports-implemented = <0x1>;
++			resets = <&reset 96>;
++			reset-names = "arst";
++			status = "disabled";
++		};
++
++		sata_phy: sata-phy@50440300 {
++			compatible = "eswin,eic7700-sata-phy";
++			reg = <0x0 0x50440300 0x0 0x40>;
++			clocks = <&hspcrg 17>;
++			clock-names = "phy";
++			resets = <&hspcrg 0>, <&hspcrg 1>;
++			reset-names = "port", "phy";
++			#phy-cells = <0>;
++		};
++
+ 		sdhci_emmc: mmc@50450000 {
+ 			compatible = "eswin,eic7700-dwcmshc";
+ 			reg = <0x0 0x50450000 0x0 0x10000>;
+-- 
+2.53.0
+

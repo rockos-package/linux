@@ -1,0 +1,47 @@
+From 092b4ee686f1842d1eea6ec346748ba4072fb51c Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Wed, 6 May 2026 20:39:28 +0800
+Subject: [PATCH 67/99] RUYI: riscv: dts: eic7700: add fan_control node
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700.dtsi b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+index ae0ec8774c3c..d2fc392092a1 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700.dtsi
++++ b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+@@ -7,6 +7,7 @@
+ 
+ #include <dt-bindings/clock/eswin,eic7700-clock.h>
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pwm/pwm.h>
+ #include <dt-bindings/reset/eswin,eic7700-reset.h>
+ #include <dt-bindings/riscv/physical-memory.h>
+ #include "eic7700-opptable.dtsi"
+@@ -646,6 +647,21 @@ pwm0: pwm@50818000 {
+ 			status = "disabled";
+ 		};
+ 
++		fan_control: fan-control@50b50000 {
++			compatible = "eswin-fan-control";
++			reg = <0x0 0x50b50000 0x0 0x10000>;
++			clocks = <&clk EIC7700_CLK_GATE_LSP_FAN_PCLK>;
++			clock-names = "pclk";
++			resets = <&reset EIC7700_RESET_FAN>;
++			reset-names = "fan_rst";
++			interrupts = <354>;
++			interrupt-names = "fanirq";
++			pulses-per-revolution = <2>;
++			pwm-minimum-period = <1000>;
++			pwms = <&pwm0 0 100000 PWM_POLARITY_INVERTED>;
++			status = "disabled";
++		};
++
+ 		pinctrl: pinctrl@51600080 {
+ 			compatible = "eswin,eic7700-pinctrl";
+ 			reg = <0x0 0x51600080 0x0 0x1fff80>;
+-- 
+2.53.0
+

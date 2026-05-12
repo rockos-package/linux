@@ -1,0 +1,51 @@
+From 8cb1395e27f070094c3a5ced4ac8907e444bd6a8 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 14:28:00 +0800
+Subject: [PATCH 51/99] HACK: RISC-V: KVM: Expose all counters to VS-mode for
+ bootloader compatibility
+
+Some guest bootloaders (e.g. GRUB 2.12, FreeBSD loader) use rdcycle
+in grub_efi_get_time_ms() or similar routines. The upstream fix to
+use rdtime instead was added in commit c5ae124e11f2 ("kern/riscv/efi/
+init: Use time register in grub_efi_get_time_ms()"), but released
+versions of these bootloaders do not include this fix.
+
+By default KVM sets hcounteren=0x02, which only allows rdtime to pass
+through in VS-mode while rdcycle/rdinstret trap as virtual instructions.
+When such bootloaders execute rdcycle, they trap and the guest fails
+to boot.
+
+Set hcounteren=0x07 so that VS-mode can access cycle/time/instret
+directly without trapping.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/kvm/main.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/kvm/main.c b/arch/riscv/kvm/main.c
+index 0f3fe3986fc0..ecc2b8ff700d 100644
+--- a/arch/riscv/kvm/main.c
++++ b/arch/riscv/kvm/main.c
+@@ -44,8 +44,16 @@ int kvm_arch_enable_virtualization_cpu(void)
+ 	csr_write(CSR_HEDELEG, KVM_HEDELEG_DEFAULT);
+ 	csr_write(CSR_HIDELEG, KVM_HIDELEG_DEFAULT);
+ 
+-	/* VS should access only the time counter directly. Everything else should trap */
+-	csr_write(CSR_HCOUNTEREN, 0x02);
++	/*
++	 * HACK: Allow VS-mode to access cycle/time/instret directly.
++	 *
++	 * Some guest bootloaders (e.g. GRUB 2.12, FreeBSD loader) use
++	 * rdcycle for timekeeping and do not include the upstream fix
++	 * (c5ae124e11f2) to use rdtime instead. Expose all counters to
++	 * VS-mode so that guest bootloaders can access cycle/time/instret
++	 * without trapping.
++	 */
++	csr_write(CSR_HCOUNTEREN, 0x07);
+ 
+ 	csr_write(CSR_HVIP, 0);
+ 
+-- 
+2.53.0
+

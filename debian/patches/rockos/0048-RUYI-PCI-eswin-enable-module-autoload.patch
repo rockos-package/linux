@@ -1,0 +1,46 @@
+From 92a2ed1b369a5b1ac8fc814df24456ddad24b737 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 22:16:14 +0800
+Subject: [PATCH 048/102] RUYI: PCI: eswin: enable module autoload
+
+The driver registered itself with builtin_platform_driver(), which only
+expands to a probe path when the driver is built-in (=y). When built as
+a module (=m, the default in defconfig), no init/exit hook is generated
+so the driver never probes even after manual modprobe. Additionally
+there is no MODULE_DEVICE_TABLE entry, so udev cannot match the
+"eswin,eic7700-pcie" compatible to the module and does not autoload it.
+
+Switch to module_platform_driver() so the driver works in both built-in
+and module configurations, and add MODULE_DEVICE_TABLE(of, ...) so
+modules.alias contains the OF compatible string and the module is
+autoloaded by udev.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ drivers/pci/controller/dwc/pcie-eswin.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
+index 2845832b3824..14826225e538 100644
+--- a/drivers/pci/controller/dwc/pcie-eswin.c
++++ b/drivers/pci/controller/dwc/pcie-eswin.c
+@@ -389,6 +389,7 @@ static const struct of_device_id eswin_pcie_of_match[] = {
+ 	{ .compatible = "eswin,eic7700-pcie", .data = &eswin_eic7700_data },
+ 	{}
+ };
++MODULE_DEVICE_TABLE(of, eswin_pcie_of_match);
+ 
+ static struct platform_driver eswin_pcie_driver = {
+ 	.probe = eswin_pcie_probe,
+@@ -399,7 +400,7 @@ static struct platform_driver eswin_pcie_driver = {
+ 		.pm = &eswin_pcie_pm,
+ 	},
+ };
+-builtin_platform_driver(eswin_pcie_driver);
++module_platform_driver(eswin_pcie_driver);
+ 
+ MODULE_DESCRIPTION("ESWIN PCIe Root Complex driver");
+ MODULE_AUTHOR("Yu Ning <ningyu@eswincomputing.com>");
+-- 
+2.47.3
+

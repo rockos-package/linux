@@ -1,0 +1,50 @@
+From c91b803b0e88251976dc99cdec525c23b2f6889b Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 18:56:43 +0800
+Subject: [PATCH 075/102] RUYI: riscv: dts: eic7700: Use GPIO CD for SD card
+ detect on HiFive Premier P550
+
+The SD card detect signal (SDIO0_CD net) on HiFive Premier P550 is wired
+to SoC ball F14 (mode_set0 pin). When this pin is muxed to GPIO function,
+it appears as gpioA[13]. Add a pinctrl group selecting GPIO function with
+input enable and pull-up bias for the mode_set0 pin, and wire cd-gpios to
+gpioA[13] so the SDHCI driver uses GPIO-based card detection.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-hifive-premier-p550.dts   | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index fb4f1cebb0d9..cb702154c24b 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -85,6 +85,15 @@ gpio11-pins {
+ 		};
+ 	};
+ 
++	pinctrl_gpio13: gpio13-grp {
++		gpio13-pins {
++			pins = "mode_set0";
++			function = "gpio";
++			input-enable;
++			bias-pull-up;
++		};
++	};
++
+ 	pinctrl_gpio14: gpio14-grp {
+ 		gpio14-pins {
+ 			pins = "mode_set1";
+@@ -305,6 +314,9 @@ &sdhci_emmc {
+ 
+ &sdio0 {
+ 	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_gpio13>;
++	cd-gpios = <&gpioA 13 GPIO_ACTIVE_LOW>;
+ };
+ 
+ &uart0 {
+-- 
+2.47.3
+

@@ -1,0 +1,28 @@
+From ba488d8171d70cb4c3dbef88b8dffefc59a11281 Mon Sep 17 00:00:00 2001
+From: Pritesh Patel <pritesh.patel@einfochips.com>
+Date: Thu, 20 Nov 2025 18:42:38 +0530
+Subject: [PATCH 056/102] SIFIVE: riscv: dts: hifive-premier-p550: enable PCIe
+
+FROM: https://github.com/sifiveinc/riscv-linux/commit/413f4b86bd564fcd684fba8df2f99c16c86ee8a0
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index ae39d151b4de..0fccec245cf7 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -276,3 +276,7 @@ &uart0 {
+ &uart2 {
+ 	status = "okay";
+ };
++
++&pcie {
++	status = "okay";
++};
+-- 
+2.47.3
+

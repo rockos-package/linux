@@ -1,0 +1,28 @@
+From 8e381557ebc136134525d30188b34dfc9b52252a Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:49:50 +0800
+Subject: [PATCH 076/102] RUYI: dt-bindings: riscv: Add Milk-V Megrez board
+
+Add DT binding entry for the Milk-V Megrez board, which is based on the
+ESWIN EIC7700 SoC.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ Documentation/devicetree/bindings/riscv/eswin.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/riscv/eswin.yaml b/Documentation/devicetree/bindings/riscv/eswin.yaml
+index c603c45eef22..f730f5ff9179 100644
+--- a/Documentation/devicetree/bindings/riscv/eswin.yaml
++++ b/Documentation/devicetree/bindings/riscv/eswin.yaml
+@@ -21,6 +21,7 @@ properties:
+     oneOf:
+       - items:
+           - enum:
++              - milkv,megrez
+               - sifive,hifive-premier-p550
+           - const: eswin,eic7700
+ 
+-- 
+2.47.3
+

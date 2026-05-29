@@ -1,0 +1,77 @@
+From e97c8eb6bfd8036b22e0910de5d9276491d57023 Mon Sep 17 00:00:00 2001
+From: Xuyang Dong <dongxuyang@eswincomputing.com>
+Date: Fri, 24 Apr 2026 17:54:35 +0800
+Subject: [PATCH 025/102] FROMLIST: dt-bindings: pwm: dwc: add optional reset
+
+The DesignWare PWM includes separate reset signals dedicated to each clock
+domain:
+The presetn signal resets logic in pclk domain.
+The timer_N_resetn signal resets logic in the timer_N_clk domain.
+The resets are active-low.
+
+EIC7700 use DesignWare IP for PWM controllers. Add ESWIN EIC7700 support
+ in snps,dw-apb-timers-pwm2.yaml
+
+Signed-off-by: Xuyang Dong <dongxuyang@eswincomputing.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Link: https://lore.kernel.org/r/20260424095435.1721-1-dongxuyang@eswincomputing.com
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../bindings/pwm/snps,dw-apb-timers-pwm2.yaml | 25 ++++++++++++++++---
+ 1 file changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pwm/snps,dw-apb-timers-pwm2.yaml b/Documentation/devicetree/bindings/pwm/snps,dw-apb-timers-pwm2.yaml
+index 7523a89a1773..96a70e55a167 100644
+--- a/Documentation/devicetree/bindings/pwm/snps,dw-apb-timers-pwm2.yaml
++++ b/Documentation/devicetree/bindings/pwm/snps,dw-apb-timers-pwm2.yaml
+@@ -20,12 +20,11 @@ description:
+   instead of having to encode the IP version number in the device tree
+   compatible.
+ 
+-allOf:
+-  - $ref: pwm.yaml#
+-
+ properties:
+   compatible:
+-    const: snps,dw-apb-timers-pwm2
++    enum:
++      - snps,dw-apb-timers-pwm2
++      - eswin,eic7700-pwm
+ 
+   reg:
+     maxItems: 1
+@@ -43,6 +42,12 @@ properties:
+       - const: bus
+       - const: timer
+ 
++  resets:
++    minItems: 1
++    items:
++      - description: Interface bus reset
++      - description: PWM timer logic reset
++
+   snps,pwm-number:
+     $ref: /schemas/types.yaml#/definitions/uint32
+     description: The number of PWM channels configured for this instance
+@@ -54,6 +59,18 @@ required:
+   - clocks
+   - clock-names
+ 
++allOf:
++  - $ref: pwm.yaml#
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: eswin,eic7700-pwm
++    then:
++      required:
++        - resets
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.47.3
+

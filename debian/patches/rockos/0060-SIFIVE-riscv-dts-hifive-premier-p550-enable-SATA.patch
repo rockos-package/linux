@@ -1,0 +1,35 @@
+From 9c6869360901dcd67d6601db0300cffca1f58060 Mon Sep 17 00:00:00 2001
+From: Pritesh Patel <pritesh.patel@einfochips.com>
+Date: Thu, 20 Nov 2025 19:35:05 +0530
+Subject: [PATCH 060/102] SIFIVE: riscv: dts: hifive-premier-p550: enable SATA
+
+FROM: https://github.com/sifiveinc/riscv-linux/commit/111e6817f8859946757ad7f01e42a43031cc491b
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index f6d22cecfff2..ace33783872b 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -277,6 +277,14 @@ gmac1_phy0: ethernet-phy@0 {
+ 	};
+ };
+ 
++&sata {
++	status = "okay";
++};
++
++&sata_phy {
++	status = "okay";
++};
++
+ &sdhci_emmc {
+ 	status = "okay";
+ };
+-- 
+2.47.3
+

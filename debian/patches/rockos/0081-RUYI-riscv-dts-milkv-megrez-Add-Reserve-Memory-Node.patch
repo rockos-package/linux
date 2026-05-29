@@ -1,0 +1,51 @@
+From 67c1429f755b259e9f225769675c3543fe191902 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:51:26 +0800
+Subject: [PATCH 081/102] RUYI: riscv: dts: milkv-megrez: Add Reserve Memory
+ Node
+
+Reserve a 512 MiB CMA region as the default DMA pool on the Milk-V
+Megrez board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-milkv-megrez.dts      | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index 114ac8bf0ba8..5f4a8e79aac6 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -5,6 +5,8 @@
+ 
+ /dts-v1/;
+ 
++#define CMA_SIZE        0x20000000
++
+ #include "eic7700.dtsi"
+ 
+ / {
+@@ -23,6 +25,20 @@ chosen {
+ 		stdout-path = "serial0:115200n8";
+ 	};
+ 
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0x0 CMA_SIZE>;
++			alignment = <0x0 0x1000>;
++			linux,cma-default;
++		};
++	};
++
+ 	vcc_1v8: vcc1v8 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vcc1v8";
+-- 
+2.47.3
+

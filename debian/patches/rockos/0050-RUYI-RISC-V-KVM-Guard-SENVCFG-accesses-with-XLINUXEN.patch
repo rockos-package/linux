@@ -1,0 +1,48 @@
+From e2cc31e1be60170c39b0b57116436c51a456f1b2 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 03:16:50 +0800
+Subject: [PATCH 050/102] RUYI: RISC-V: KVM: Guard SENVCFG accesses with
+ XLINUXENVCFG cpufeature
+
+The SENVCFG CSR is not implemented on all RISC-V cores. The kernel
+already uses RISCV_ISA_EXT_XLINUXENVCFG to protect SENVCFG accesses
+in switch_to.h and suspend.c, but KVM's vcpu world-switch path
+(kvm_riscv_vcpu_swap_in_guest_state / swap_in_host_state) was
+missing this guard.
+
+Add the same cpufeature check before csr_swap(CSR_SENVCFG) in both
+swap functions to avoid illegal instruction exceptions on cores
+without SENVCFG, such as SiFive P550.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/kvm/vcpu.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/riscv/kvm/vcpu.c b/arch/riscv/kvm/vcpu.c
+index fdd99ac1e714..84e9798330ca 100644
+--- a/arch/riscv/kvm/vcpu.c
++++ b/arch/riscv/kvm/vcpu.c
+@@ -753,7 +753,8 @@ static __always_inline void kvm_riscv_vcpu_swap_in_guest_state(struct kvm_vcpu *
+ 	struct kvm_vcpu_config *cfg = &vcpu->arch.cfg;
+ 
+ 	vcpu->arch.host_scounteren = csr_swap(CSR_SCOUNTEREN, csr->scounteren);
+-	vcpu->arch.host_senvcfg = csr_swap(CSR_SENVCFG, csr->senvcfg);
++	if (riscv_has_extension_unlikely(RISCV_ISA_EXT_XLINUXENVCFG))
++		vcpu->arch.host_senvcfg = csr_swap(CSR_SENVCFG, csr->senvcfg);
+ 	if (riscv_has_extension_unlikely(RISCV_ISA_EXT_SMSTATEEN) &&
+ 	    (cfg->hstateen0 & SMSTATEEN0_SSTATEEN0))
+ 		vcpu->arch.host_sstateen0 = csr_swap(CSR_SSTATEEN0,
+@@ -767,7 +768,8 @@ static __always_inline void kvm_riscv_vcpu_swap_in_host_state(struct kvm_vcpu *v
+ 	struct kvm_vcpu_config *cfg = &vcpu->arch.cfg;
+ 
+ 	csr->scounteren = csr_swap(CSR_SCOUNTEREN, vcpu->arch.host_scounteren);
+-	csr->senvcfg = csr_swap(CSR_SENVCFG, vcpu->arch.host_senvcfg);
++	if (riscv_has_extension_unlikely(RISCV_ISA_EXT_XLINUXENVCFG))
++		csr->senvcfg = csr_swap(CSR_SENVCFG, vcpu->arch.host_senvcfg);
+ 	if (riscv_has_extension_unlikely(RISCV_ISA_EXT_SMSTATEEN) &&
+ 	    (cfg->hstateen0 & SMSTATEEN0_SSTATEEN0))
+ 		smcsr->sstateen0 = csr_swap(CSR_SSTATEEN0,
+-- 
+2.47.3
+

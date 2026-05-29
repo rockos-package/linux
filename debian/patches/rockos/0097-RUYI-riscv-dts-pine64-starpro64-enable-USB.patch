@@ -1,0 +1,31 @@
+From a0c8ef7e25cfe293a6b3bc45d94bbe462e8c986a Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:43:43 +0800
+Subject: [PATCH 097/102] RUYI: riscv: dts: pine64-starpro64: enable USB
+
+Enable usb0 and usb1 on the Pine64 StarPro64 board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index 4db40f67126f..fe0c96f34d08 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -160,3 +160,11 @@ &uart0 {
+ &uart2 {
+ 	status = "okay";
+ };
++
++&usb0 {
++	status = "okay";
++};
++
++&usb1 {
++	status = "okay";
++};
+-- 
+2.47.3
+

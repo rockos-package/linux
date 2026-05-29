@@ -1,0 +1,39 @@
+From b50c04024072f907734dcb16d41826cd81480cb9 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:52:41 +0800
+Subject: [PATCH 086/102] RUYI: riscv: dts: milkv-megrez: enable wdt
+
+Enable all four watchdog timers on the Milk-V Megrez board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-milkv-megrez.dts      | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index 04e3d0a7bcc0..da5d9a7ce4dd 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -197,3 +197,19 @@ &usb0 {
+ &usb1 {
+ 	status = "okay";
+ };
++
++&wdt0 {
++	status = "okay";
++};
++
++&wdt1 {
++	status = "okay";
++};
++
++&wdt2 {
++	status = "okay";
++};
++
++&wdt3 {
++	status = "okay";
++};
+-- 
+2.47.3
+

@@ -1,0 +1,41 @@
+From d64bc81db380d81205c1a30d2e805521772ce78b Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Wed, 6 May 2026 20:27:51 +0800
+Subject: [PATCH 067/102] RUYI: riscv: dts: hifive-premier-p550: enable pwm
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-hifive-premier-p550.dts  | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index ae9fd2a5fdb0..19555c5af2d8 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -228,6 +228,13 @@ gpio111-pins {
+ 			bias-disable;
+ 		};
+ 	};
++
++	pinctrl_pwm0: pwm0-grp {
++		pwm0-pins {
++			pins = "fan_pwm";
++			function = "pwm";
++		};
++	};
+ };
+ 
+ &gmac0 {
+@@ -312,3 +319,9 @@ &usb0 {
+ &usb1 {
+ 	status = "okay";
+ };
++
++&pwm0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm0>;
++};
+-- 
+2.47.3
+

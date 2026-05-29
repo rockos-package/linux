@@ -1,0 +1,81 @@
+From 36b3331f72f0d32720b2c7dedfe37621a96f3c52 Mon Sep 17 00:00:00 2001
+From: Icenowy Zheng <uwu@icenowy.me>
+Date: Sun, 17 May 2026 23:31:46 +0800
+Subject: [PATCH 102/102] RUYI: riscv: dts: pine64-starpro64: enable
+ PWM-controlled fan
+
+StarPro64 board has a PWM-controlled fan port.
+
+Add a pwm-fan device node for it.
+
+The tach pin of EIC7700 is left unconnected on this board, so it cannot
+be utilized.
+
+Signed-off-by: Icenowy Zheng <uwu@icenowy.me>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../dts/eswin/eic7700-pine64-starpro64.dts    | 48 +++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index 27107a5b6a8e..625f52ab29b4 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -47,6 +47,54 @@ vcc_1v8: vcc1v8 {
+ 		regulator-min-microvolt = <1800000>;
+ 		regulator-max-microvolt = <1800000>;
+ 	};
++
++	fan: pwm-fan {
++		compatible = "pwm-fan";
++		#cooling-cells = <2>;
++		pwms = <&pwm0 0 30000000 PWM_POLARITY_INVERTED>;
++		cooling-levels = <0 66 196 255>;
++	};
++
++	thermal-zones {
++		thermal0 {
++			trips {
++				fan_config0: fan-trip0 {
++					temperature = <39000>;
++					hysteresis = <5000>;
++					type = "active";
++				};
++
++				fan_config1: fan-trip1 {
++					temperature = <50000>;
++					hysteresis = <5000>;
++					type = "active";
++				};
++
++				fan_config2: fan-trip2 {
++					temperature = <60000>;
++					hysteresis = <5000>;
++					type = "active";
++				};
++			};
++
++			cooling-maps {
++				map-active-0 {
++					cooling-device = <&fan 1 1>;
++					trip = <&fan_config0>;
++				};
++
++				map-active-1 {
++					cooling-device = <&fan 2 2>;
++					trip = <&fan_config1>;
++				};
++
++				map-active-2 {
++					cooling-device = <&fan 3 3>;
++					trip = <&fan_config2>;
++				};
++			};
++		};
++	};
+ };
+ 
+ &cpu_opp_table {
+-- 
+2.47.3
+

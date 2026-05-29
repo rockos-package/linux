@@ -1,0 +1,37 @@
+From f8c0378ffb5eb389c446ee32163cddeabb094dd5 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Wed, 6 May 2026 23:29:53 +0800
+Subject: [PATCH 072/102] RUYI: riscv: dts: hifive-premier-p550: enable wdt
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../dts/eswin/eic7700-hifive-premier-p550.dts    | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index 126311dc4eb5..fb4f1cebb0d9 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -338,3 +338,19 @@ &fan_control {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_fan_tach_pins>;
+ };
++
++&wdt0 {
++	status = "okay";
++};
++
++&wdt1 {
++	status = "okay";
++};
++
++&wdt2 {
++	status = "okay";
++};
++
++&wdt3 {
++	status = "okay";
++};
+-- 
+2.47.3
+

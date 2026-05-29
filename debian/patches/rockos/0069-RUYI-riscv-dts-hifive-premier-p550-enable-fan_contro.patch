@@ -1,0 +1,42 @@
+From b4dff95b7ca23afad85d8b508e1b1603cdc70cf9 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Wed, 6 May 2026 20:43:23 +0800
+Subject: [PATCH 069/102] RUYI: riscv: dts: hifive-premier-p550: enable
+ fan_control
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-hifive-premier-p550.dts  | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+index 19555c5af2d8..126311dc4eb5 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-hifive-premier-p550.dts
+@@ -235,6 +235,13 @@ pwm0-pins {
+ 			function = "pwm";
+ 		};
+ 	};
++
++	pinctrl_fan_tach_pins: fan-tach-grp {
++		fan-tach-pins {
++			pins = "fan_tach";
++			function = "fan_tach";
++		};
++	};
+ };
+ 
+ &gmac0 {
+@@ -325,3 +332,9 @@ &pwm0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pwm0>;
+ };
++
++&fan_control {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_fan_tach_pins>;
++};
+-- 
+2.47.3
+

@@ -1,0 +1,30 @@
+From 6555045f0ccab7dade12c25d0bffc54b62c496a2 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 20:51:06 +0800
+Subject: [PATCH 080/102] RUYI: riscv: dts: milkv-megrez: enable PCIe
+
+Enable the PCIe controller on the Milk-V Megrez board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+index b99984925a56..114ac8bf0ba8 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-milkv-megrez.dts
+@@ -115,6 +115,10 @@ gmac1_phy0: ethernet-phy@0 {
+ 	};
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &sdhci_emmc {
+ 	status = "okay";
+ 	/delete-property/ mmc-hs400-1_8v;
+-- 
+2.47.3
+

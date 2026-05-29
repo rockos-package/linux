@@ -1,0 +1,41 @@
+From 86f86c1e84d61d8e25c07070a3434e265b3f175d Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:44:29 +0800
+Subject: [PATCH 099/102] RUYI: riscv: dts: pine64-starpro64: enable
+ fan_control
+
+Enable fan tach controller for fan RPM monitoring on the Pine64
+StarPro64 board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ .../boot/dts/eswin/eic7700-pine64-starpro64.dts     | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index 85acb5328dbb..fd4d653ab608 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -91,6 +91,19 @@ pwm0-pins {
+ 			function = "pwm";
+ 		};
+ 	};
++
++	pinctrl_fan_tach_pins: fan-tach-grp {
++		fan-tach-pins {
++			pins = "fan_tach";
++			function = "fan_tach";
++		};
++	};
++};
++
++&fan_control {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_fan_tach_pins>;
+ };
+ 
+ &gmac0 {
+-- 
+2.47.3
+

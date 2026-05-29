@@ -1,0 +1,34 @@
+From dcb1eec7ecbd0f23b2b2a7a0943564fe587b2d1f Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:43:29 +0800
+Subject: [PATCH 096/102] RUYI: riscv: dts: pine64-starpro64: enable SATA
+
+Enable the on-board SATA controller on the Pine64 StarPro64 board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index 44d71a15b729..4db40f67126f 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -126,6 +126,14 @@ &pcie {
+ 	status = "okay";
+ };
+ 
++&sata {
++	status = "okay";
++};
++
++&sata_phy {
++	status = "okay";
++};
++
+ &sdhci_emmc {
+ 	status = "okay";
+ 	/*
+-- 
+2.47.3
+

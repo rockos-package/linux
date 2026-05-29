@@ -1,0 +1,83 @@
+From 7c095dc8e50a4ca47924c3cd409157a1ebb1f615 Mon Sep 17 00:00:00 2001
+From: Pritesh Patel <pritesh.patel@einfochips.com>
+Date: Thu, 20 Nov 2025 12:43:02 +0530
+Subject: [PATCH 053/102] SIFIVE: riscv: dts: eic7700: add EMMC and SD card
+ node
+
+FROM: https://github.com/sifiveinc/riscv-linux/commit/6b7d1f81d52a4c00fd7150d623f85932022f021d
+
+Signed-off-by: Pritesh Patel <pritesh.patel@einfochips.com>
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700.dtsi | 55 ++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700.dtsi b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+index a44932218a7c..6dfab43b2031 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700.dtsi
++++ b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+@@ -336,6 +336,61 @@ stmmac_axi_setup_gmac1: stmmac-axi-config {
+ 			};
+ 		};
+ 
++
++		sdhci_emmc: mmc@50450000 {
++			compatible = "eswin,eic7700-dwcmshc";
++			reg = <0x0 0x50450000 0x0 0x10000>;
++			clocks = <&clk EIC7700_CLK_GATE_HSP_MSHC0_CORE_CLK>,
++				   <&clk EIC7700_CLK_GATE_HSP_CFG_CLK>,
++				   <&clk EIC7700_CLK_GATE_HSP_ACLK>;
++			clock-names = "core", "bus", "axi";
++			assigned-clocks = <&clk EIC7700_CLK_GATE_HSP_MSHC0_CORE_CLK>;
++			assigned-clock-rates = <200000000>;
++			interrupt-parent = <&plic>;
++			interrupts = <79>;
++			resets = <&reset 75>,
++				   <&reset 72>,
++				   <&reset 88>,
++				   <&reset 92>;
++			reset-names = "txrx", "phy", "prstn", "axi";
++			bus-width = <8>;
++			non-removable;
++			mmc-hs400-1_8v;
++			no-sdio;
++			no-sd;
++			max-frequency = <200000000>;
++			#size-cells = <2>;
++			eswin,hsp-sp-csr = <&hsp_sp_csr 0x508 0x50c>;
++			eswin,drive-impedance-ohms = <50>;
++			status = "disabled";
++		};
++
++		sdio0: mmc@0x50460000{
++			compatible = "eswin,eic7700-dwcmshc";
++			reg = <0x0 0x50460000 0x0 0x10000>;
++			interrupt-parent = <&plic>;
++			interrupts = <81>;
++			clocks = <&clk EIC7700_CLK_GATE_HSP_MSHC1_CORE_CLK>,
++				   <&clk EIC7700_CLK_GATE_HSP_CFG_CLK>,
++				   <&clk EIC7700_CLK_GATE_HSP_ACLK>;
++			clock-names ="core","bus","axi";
++			resets = <&reset 76>,
++				   <&reset 73>,
++				   <&reset 87>,
++				   <&reset 91>;
++			reset-names = "txrx","phy","prstn","axi";
++			clock-frequency = <208000000>;
++			max-frequency = <208000000>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			bus-width = <4>;
++			no-sdio;
++			no-mmc;
++			eswin,hsp-sp-csr = <&hsp_sp_csr 0x608 0x60c>;
++			eswin,drive-impedance-ohms = <33>;
++			status = "disabled";
++		};
++
+ 		uart0: serial@50900000 {
+ 			compatible = "snps,dw-apb-uart";
+ 			reg = <0x0 0x50900000 0x0 0x10000>;
+-- 
+2.47.3
+

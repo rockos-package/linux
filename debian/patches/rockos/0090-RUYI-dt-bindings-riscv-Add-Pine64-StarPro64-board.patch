@@ -1,0 +1,28 @@
+From 46d86a3f8318b26bfb09fe15d21aec34c3c88ada Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:40:58 +0800
+Subject: [PATCH 090/102] RUYI: dt-bindings: riscv: Add Pine64 StarPro64 board
+
+Add DT binding entry for the Pine64 StarPro64 board, which is based on
+the ESWIN EIC7700 SoC.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ Documentation/devicetree/bindings/riscv/eswin.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/riscv/eswin.yaml b/Documentation/devicetree/bindings/riscv/eswin.yaml
+index f730f5ff9179..9882a7cd681c 100644
+--- a/Documentation/devicetree/bindings/riscv/eswin.yaml
++++ b/Documentation/devicetree/bindings/riscv/eswin.yaml
+@@ -22,6 +22,7 @@ properties:
+       - items:
+           - enum:
+               - milkv,megrez
++              - pine64,starpro64
+               - sifive,hifive-premier-p550
+           - const: eswin,eic7700
+ 
+-- 
+2.47.3
+

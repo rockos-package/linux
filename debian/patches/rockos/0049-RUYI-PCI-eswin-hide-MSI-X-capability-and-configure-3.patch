@@ -1,0 +1,71 @@
+From 06346f45343e42e42793efaf8c7130c6258c40cb Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 22:22:10 +0800
+Subject: [PATCH 049/102] RUYI: PCI: eswin: hide MSI-X capability and configure
+ 32 MSI vectors
+
+The EIC7700 PCIe controller exposes an MSI-X capability in configuration
+space, but the hardware cannot actually deliver MSI-X interrupts. When
+the PCI port driver enumerates the root port it tries to allocate MSI-X
+vectors via __pci_enable_msix_range, which busy-loops without yielding
+and triggers RCU stalls of 50+ seconds; during the stall mmcblk I/O is
+starved and userspace processes get killed by SIGBUS.
+
+Mirror the downstream eswin pcie driver and, with DBI write enabled:
+  * advertise 32 MSI vectors in PCIE_DSP_PF0_MSI_CAP
+    (Multiple Message Capable = log2(32))
+  * hide the MSI-X capability by clearing the next-capability pointer at
+    PCIE_NEXT_CAP_PTR so MSI-X is unreachable from the capability list
+
+After this change the port driver picks MSI and probe completes promptly
+on Milk-V Megrez.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ drivers/pci/controller/dwc/pcie-eswin.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
+index 14826225e538..fbfeba7ac992 100644
+--- a/drivers/pci/controller/dwc/pcie-eswin.c
++++ b/drivers/pci/controller/dwc/pcie-eswin.c
+@@ -42,6 +42,13 @@
+ #define PCI_VENDOR_ID_ESWIN		0x1fe1
+ #define PCI_DEVICE_ID_ESWIN_EIC7700	0x2030
+ 
++/* DBI capability registers */
++#define PCIE_DSP_PF0_MSI_CAP		0x50
++#define PCIE_MSI_MULTIPLE_MSG_MASK	GENMASK(19, 17)
++#define PCIE_MSI_MULTIPLE_MSG_32	FIELD_PREP(PCIE_MSI_MULTIPLE_MSG_MASK, 5)
++#define PCIE_NEXT_CAP_PTR		0x70
++#define PCIE_NEXT_CAP_PTR_MASK		GENMASK(15, 8)
++
+ #define ESWIN_NUM_RSTS			ARRAY_SIZE(eswin_pcie_rsts)
+ 
+ static const char * const eswin_pcie_rsts[] = {
+@@ -242,6 +249,22 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_ESWIN);
+ 	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_ESWIN_EIC7700);
++
++	/* Advertise 32 MSI vectors via MSI Multiple Message Capable. */
++	val = dw_pcie_readl_dbi(pci, PCIE_DSP_PF0_MSI_CAP);
++	val &= ~PCIE_MSI_MULTIPLE_MSG_MASK;
++	val |= PCIE_MSI_MULTIPLE_MSG_32;
++	dw_pcie_writel_dbi(pci, PCIE_DSP_PF0_MSI_CAP, val);
++
++	/*
++	 * Hide the MSI-X capability from the configuration space. The EIC7700
++	 * cannot deliver MSI-X interrupts in practice, so the PCI port driver
++	 * must not try to allocate MSI-X vectors during enumeration.
++	 */
++	val = dw_pcie_readl_dbi(pci, PCIE_NEXT_CAP_PTR);
++	val &= ~PCIE_NEXT_CAP_PTR_MASK;
++	dw_pcie_writel_dbi(pci, PCIE_NEXT_CAP_PTR, val);
++
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	return 0;
+-- 
+2.47.3
+

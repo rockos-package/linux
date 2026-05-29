@@ -1,0 +1,30 @@
+From a3350ce3c0ba60b4a09fb363a52a4f83d5f9f380 Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 23:42:53 +0800
+Subject: [PATCH 094/102] RUYI: riscv: dts: pine64-starpro64: enable PCIe
+
+Enable the PCIe controller on the Pine64 StarPro64 board.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+index dd452c20e7f1..b7ff07efa6bf 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
++++ b/arch/riscv/boot/dts/eswin/eic7700-pine64-starpro64.dts
+@@ -106,6 +106,10 @@ gmac1_phy0: ethernet-phy@0 {
+ 	};
+ };
+ 
++&pcie {
++	status = "okay";
++};
++
+ &sdhci_emmc {
+ 	status = "okay";
+ 	/*
+-- 
+2.47.3
+

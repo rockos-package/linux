@@ -1,0 +1,99 @@
+From c1593d181753414cbdbef174ea537bf7bcfe191c Mon Sep 17 00:00:00 2001
+From: Han Gao <gaohan@iscas.ac.cn>
+Date: Sun, 10 May 2026 21:54:13 +0800
+Subject: [PATCH 089/102] RUYI: usb: dwc3: generic-plat: program EIC7700 USB
+ MPLL and VBUS frequency
+
+The 24 MHz reference clock needs to be multiplied to 125 MHz to meet
+the USB PHY requirement. Without programming the HSP USB MPLL and VBUS
+frequency control registers, the controller PHY runs at the wrong
+clock and xHCI register handshakes time out.
+
+Read two additional offsets from the eswin,hsp-sp-csr property and
+write the VBUS frequency selector (0x2a, fsel for 24 MHz per TRM) and
+MPLL default value (0x0, mpll_multiplier for 24 MHz per TRM) to bring
+up the PHY clock.
+
+Update the EIC7700 DTSI based on the SoC TRM (HSP_SP_CSR table) so the
+property carries the correct AXI low-power control offset along with
+the new VBUS/MPLL offsets:
+  USB0: BUS_CTRL=0x800, AXI_LP_CTRL=0x808, VBUS_FREQ_CTRL=0x83c, MPLL_CTRL=0x840
+  USB1: BUS_CTRL=0x900, AXI_LP_CTRL=0x908, VBUS_FREQ_CTRL=0x93c, MPLL_CTRL=0x940
+
+The previous 0x818/0x918 entries actually pointed at the unrelated PME
+control registers (USB[01]_PME_CTRL), so the AXI low-power CSYSREQ bits
+were never being written to the right place.
+
+Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+---
+ arch/riscv/boot/dts/eswin/eic7700.dtsi |  4 ++--
+ drivers/usb/dwc3/dwc3-generic-plat.c   | 15 ++++++++++++++-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/arch/riscv/boot/dts/eswin/eic7700.dtsi b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+index 5b129dc6e112..66b25dd98c52 100644
+--- a/arch/riscv/boot/dts/eswin/eic7700.dtsi
++++ b/arch/riscv/boot/dts/eswin/eic7700.dtsi
+@@ -523,7 +523,7 @@ usb0: usb@50480000 {
+ 			snps,dis-del-phy-power-chg-quirk;
+ 			snps,parkmode-disable-ss-quirk;
+ 			maximum-speed = "high-speed";
+-			eswin,hsp-sp-csr = <&hsp_sp_csr 0x800 0x818>;
++			eswin,hsp-sp-csr = <&hsp_sp_csr 0x800 0x808 0x83c 0x840>;
+ 			status = "disabled";
+ 		};
+ 
+@@ -548,7 +548,7 @@ usb1: usb@50490000 {
+ 			snps,parkmode-disable-ss-quirk;
+ 			maximum-speed = "high-speed";
+ 			wakeup-source;
+-			eswin,hsp-sp-csr = <&hsp_sp_csr 0x900 0x918>;
++			eswin,hsp-sp-csr = <&hsp_sp_csr 0x900 0x908 0x93c 0x940>;
+ 			status = "disabled";
+ 		};
+ 
+diff --git a/drivers/usb/dwc3/dwc3-generic-plat.c b/drivers/usb/dwc3/dwc3-generic-plat.c
+index 1027ca80784b..39e67df8ea5e 100644
+--- a/drivers/usb/dwc3/dwc3-generic-plat.c
++++ b/drivers/usb/dwc3/dwc3-generic-plat.c
+@@ -21,6 +21,8 @@
+ #define EIC7700_HSP_BUS_CLK_EN		BIT(28)
+ #define EIC7700_HSP_AXI_LP_XM_CSYSREQ	BIT(0)
+ #define EIC7700_HSP_AXI_LP_XS_CSYSREQ	BIT(16)
++#define EIC7700_HSP_USB_VBUS_FSEL	0x2a
++#define EIC7700_HSP_USB_MPLL_DEFAULT	0x0
+ 
+ struct dwc3_generic {
+ 	struct device		*dev;
+@@ -46,9 +48,11 @@ static int dwc3_eic7700_init(struct dwc3_generic *dwc3g)
+ {
+ 	struct device *dev = dwc3g->dev;
+ 	struct regmap *regmap;
++	u32 hsp_usb_vbus_freq;
+ 	u32 hsp_usb_axi_lp;
++	u32 hsp_usb_mpll;
+ 	u32 hsp_usb_bus;
+-	u32 args[2];
++	u32 args[4];
+ 
+ 	regmap = syscon_regmap_lookup_by_phandle_args(dev->of_node,
+ 						      "eswin,hsp-sp-csr",
+@@ -60,6 +64,15 @@ static int dwc3_eic7700_init(struct dwc3_generic *dwc3g)
+ 
+ 	hsp_usb_bus       = args[0];
+ 	hsp_usb_axi_lp    = args[1];
++	hsp_usb_vbus_freq = args[2];
++	hsp_usb_mpll      = args[3];
++
++	/*
++	 * The reference clock is 24 MHz; program the MPLL to satisfy the USB
++	 * PHY's 125 MHz requirement and select the matching VBUS frequency.
++	 */
++	regmap_write(regmap, hsp_usb_vbus_freq, EIC7700_HSP_USB_VBUS_FSEL);
++	regmap_write(regmap, hsp_usb_mpll, EIC7700_HSP_USB_MPLL_DEFAULT);
+ 
+ 	/*
+ 	 * Overwrite (not read-modify-write) the bus control register so that
+-- 
+2.47.3
+

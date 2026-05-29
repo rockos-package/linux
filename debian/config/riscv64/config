@@ -9,6 +9,10 @@ CONFIG_SECCOMP=y
 CONFIG_SMP=y
 CONFIG_NUMA=y
 # CONFIG_COMPAT is not set
+CONFIG_CMDLINE="clk_ignore_unused console=ttyS0,115200 earlycon"
+## choice: Built-in command line usage
+CONFIG_CMDLINE_EXTEND=y
+## end choice
 
 ##
 ## file: arch/riscv/Kconfig.socs
@@ -67,6 +71,12 @@ CONFIG_STARFIVE_STARLINK_CACHE=y
 ##
 CONFIG_HW_RANDOM_POLARFIRE_SOC=m
 CONFIG_HW_RANDOM_JH7110=m
+
+##
+## file: drivers/clk/eswin/Kconfig
+##
+CONFIG_COMMON_CLK_EIC7700=y
+CONFIG_COMMON_CLK_EIC7700_HSP=y
 
 ##
 ## file: drivers/clk/sophgo/Kconfig
@@ -146,9 +156,11 @@ CONFIG_DRM_SUN4I=m
 ##
 ## file: drivers/hwmon/Kconfig
 ##
+CONFIG_SENSORS_ESWIN_FAN_CONTROL=m
 CONFIG_SENSORS_MR75203=m
 CONFIG_SENSORS_LM90=m
 CONFIG_SENSORS_PWM_FAN=m
+CONFIG_SENSORS_EIC7700_PVT=m
 CONFIG_SENSORS_SFCTEMP=m
 CONFIG_SENSORS_SG2042_MCU=m
 
@@ -289,6 +301,7 @@ CONFIG_PCIE_SG2042_HOST=y
 ##
 ## file: drivers/pci/controller/dwc/Kconfig
 ##
+CONFIG_PCIE_ESWIN=m
 CONFIG_PCIE_DW_PLAT_HOST=y
 CONFIG_PCIE_FU740=y
 CONFIG_PCIE_SOPHGO_DW=y
@@ -308,6 +321,11 @@ CONFIG_STARFIVE_STARLINK_PMU=y
 ## file: drivers/phy/allwinner/Kconfig
 ##
 CONFIG_PHY_SUN4I_USB=m
+
+##
+## file: drivers/phy/eswin/Kconfig
+##
+CONFIG_PHY_EIC7700_SATA=m
 
 ##
 ## file: drivers/phy/sophgo/Kconfig
@@ -378,6 +396,7 @@ CONFIG_PPS_CLIENT_GPIO=m
 ## file: drivers/pwm/Kconfig
 ##
 CONFIG_PWM=y
+CONFIG_PWM_DWC_OF=m
 CONFIG_PWM_MICROCHIP_CORE=m
 CONFIG_PWM_PXA=m
 CONFIG_PWM_SIFIVE=m
@@ -396,6 +415,8 @@ CONFIG_REGULATOR_TPS65086=m
 ##
 ## file: drivers/reset/Kconfig
 ##
+CONFIG_RESET_EIC7700=y
+CONFIG_RESET_EIC7700_HSP=y
 CONFIG_RESET_TH1520=m
 
 ##
@@ -531,6 +552,7 @@ CONFIG_FB_EFI=y
 ## file: drivers/watchdog/Kconfig
 ##
 CONFIG_DA9063_WATCHDOG=m
+CONFIG_DW_WATCHDOG=m
 CONFIG_SUNXI_WATCHDOG=m
 CONFIG_STARFIVE_WATCHDOG=m
 
@@ -551,9 +573,19 @@ CONFIG_KALLSYMS_ALL=y
 CONFIG_KEXEC=y
 
 ##
+## file: kernel/dma/Kconfig
+##
+CONFIG_DMA_CMA=y
+
+##
 ## file: lib/Kconfig.debug
 ##
 CONFIG_DEBUG_INFO_BTF=y
+
+##
+## file: mm/Kconfig
+##
+CONFIG_CMA=y
 
 ##
 ## file: sound/hda/controllers/Kconfig

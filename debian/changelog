@@ -1,3 +1,10 @@
+linux (7.0.9-1~bpo13+2) trixie-backports; urgency=medium
+
+  * Apply eic7700x backport patchset
+  * Apply eic7700x config
+
+ -- Han Gao <rabenda.cn@gmail.com>  Sat, 30 May 2026 02:58:30 +0800
+
 linux (7.0.9-1~bpo13+1) trixie-backports; urgency=medium
 
   * Rebuild for trixie-backports
